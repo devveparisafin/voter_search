@@ -4,7 +4,7 @@ import pandas as pd
 st.set_page_config(page_title="Excel Data Search", layout="wide")
 
 # Load Excel file (change path if needed)
-EXCEL_FILE = "data.xlsx"
+EXCEL_FILE = "2002 AC 63.xlsx"
 
 @st.cache_data
 def load_data():
