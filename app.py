@@ -1,44 +1,46 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Excel Data Search", layout="wide")
+st.set_page_config(page_title="Excel Row Search", layout="wide")
 
-st.title("🔍 Excel Data Search")
-st.write("Search any text from your Excel file and see all matching rows.")
+st.title("🔍 Excel Row Search")
+st.write("Enter a keyword and click **Search** to display all rows containing that text.")
 
-# Path to your Excel file in root folder
 EXCEL_FILE = "2002 AC 63.xlsx"
 
-# Load data once and cache it
 @st.cache_data
 def load_data():
     return pd.read_excel(EXCEL_FILE, engine="openpyxl")
 
 try:
     df = load_data()
-    st.success(f"✅ Loaded {EXCEL_FILE} successfully!")
-    st.write("### Data Preview:")
-    st.dataframe(df.head())
+    st.success("✅ Excel file loaded successfully!")
 
-    # Search input
-    search_term = st.text_input("🔎 Enter text to search:")
+    # Search input + button
+    search_term = st.text_input("Enter text to search:")
+    search_button = st.button("🔍 Search")
 
-    if search_term:
-        # Search across all columns (case-insensitive)
-        filtered_df = df[df.apply(lambda row: row.astype(str)
-                                  .str.contains(search_term, case=False, na=False)
-                                  .any(), axis=1)]
-
-        if not filtered_df.empty:
-            st.write(f"### Results for '{search_term}':")
-            st.dataframe(filtered_df)
-            st.info(f"Total matches found: {len(filtered_df)}")
+    if search_button:
+        if not search_term.strip():
+            st.warning("Please enter a search term.")
         else:
-            st.warning(f"No results found for '{search_term}'.")
-    else:
-        st.info("Type something above to search in the Excel data.")
+            matched_rows = []
+
+            # Go row by row
+            for _, row in df.iterrows():
+                # If row contains the text (case-insensitive)
+                if row.astype(str).str.contains(search_term, case=False, na=False).any():
+                    matched_rows.append(row)
+
+            # Display results
+            if matched_rows:
+                result_df = pd.DataFrame(matched_rows)
+                st.success(f"✅ Found {len(result_df)} matching rows.")
+                st.dataframe(result_df)
+            else:
+                st.warning(f"No rows found containing '{search_term}'.")
 
 except FileNotFoundError:
-    st.error(f"❌ File '{EXCEL_FILE}' not found. Please make sure it’s in the same folder as `app.py`.")
+    st.error(f"❌ '{EXCEL_FILE}' not found. Please keep it in the same folder as app.py.")
 except Exception as e:
-    st.error(f"⚠️ Error reading file: {e}")
+    st.error(f"⚠️ Error: {e}")
