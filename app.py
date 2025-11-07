@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 
 st.set_page_config(page_title="Excel Row Search", layout="wide")
 
@@ -26,17 +27,24 @@ try:
         else:
             matched_rows = []
 
-            # Go row by row
-            for _, row in df.iterrows():
-                # If row contains the text (case-insensitive)
-                if row.astype(str).str.contains(search_term, case=False, na=False).any():
-                    matched_rows.append(row)
+            # Show loading spinner
+            with st.spinner("🔎 Searching through Excel data..."):
+                # Simulate small delay (optional for UI smoothness)
+                time.sleep(0.3)
+
+                # Go row by row
+                for _, row in df.iterrows():
+                    if row.astype(str).str.contains(search_term, case=False, na=False).any():
+                        matched_rows.append(row)
+
+                # Small pause to ensure spinner appears
+                time.sleep(0.2)
 
             # Display results
             if matched_rows:
                 result_df = pd.DataFrame(matched_rows)
                 st.success(f"✅ Found {len(result_df)} matching rows.")
-                st.dataframe(result_df)
+                st.dataframe(result_df, use_container_width=True)
             else:
                 st.warning(f"No rows found containing '{search_term}'.")
 
