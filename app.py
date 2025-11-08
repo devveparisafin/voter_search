@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
 import time
+from thefuzz import fuzz
 
-st.set_page_config(page_title="Excel Row Search", layout="wide")
+st.set_page_config(page_title="Gujarati Voter Search", layout="wide")
 
-st.title("🔍 Excel Row Search")
-st.write("Enter a keyword and click **Search** to display all rows containing that text.")
-
+st.title("Viramgam Voter List - 2002")
 EXCEL_FILE = "2002 AC 63.xlsx"
 
 @st.cache_data
@@ -15,38 +14,39 @@ def load_data():
 
 try:
     df = load_data()
-    st.success("✅ Excel file loaded successfully!")
+    st.success("✅ Voter list loaded successfully!")
 
-    # Search input + button
-    search_term = st.text_input("Enter text to search:")
-    search_button = st.button("🔍 Search")
+    search_term = st.text_input("🔍 Enter Gujarati name to search:")
+    search_button = st.button("Search")
 
     if search_button:
         if not search_term.strip():
-            st.warning("Please enter a search term.")
+            st.warning("Please enter a name to search.")
         else:
             matched_rows = []
 
-            # Show loading spinner
-            with st.spinner("🔎 Searching through Excel data..."):
-                # Simulate small delay (optional for UI smoothness)
+            with st.spinner("🔎 Searching voter list..."):
                 time.sleep(0.3)
 
-                # Go row by row
                 for _, row in df.iterrows():
-                    if row.astype(str).str.contains(search_term, case=False, na=False).any():
-                        matched_rows.append(row)
+                    # Convert each cell to string for comparison
+                    for cell in row.astype(str):
+                        # Exact match or fuzzy match threshold
+                        if (
+                            search_term in cell
+                            or fuzz.partial_ratio(search_term, cell) > 80
+                        ):
+                            matched_rows.append(row)
+                            break  # move to next row once matched
 
-                # Small pause to ensure spinner appears
                 time.sleep(0.2)
 
-            # Display results
             if matched_rows:
                 result_df = pd.DataFrame(matched_rows)
-                st.success(f"✅ Found {len(result_df)} matching rows.")
+                st.success(f"✅ Found {len(result_df)} possible matches.")
                 st.dataframe(result_df, use_container_width=True)
             else:
-                st.warning(f"No rows found containing '{search_term}'.")
+                st.warning(f"No voters found similar to '{search_term}'.")
 
 except FileNotFoundError:
     st.error(f"❌ '{EXCEL_FILE}' not found. Please keep it in the same folder as app.py.")
